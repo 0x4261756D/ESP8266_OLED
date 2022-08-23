@@ -13,14 +13,43 @@ struct Vec2
 {
 	float x, y;
 };
-int cube_line_indices[12][2] = {{0, 1}, {0, 2}, {0, 4}, {1, 3}, {1, 5}, {2, 3}, {2, 6}, {3, 7}, {4, 5}, {4, 6}, {5, 7}, {6, 7}};
-int pyramid_line_indices[8][2] = {{0, 1}, {0, 2}, {3, 1}, {3, 2}, {0, 4}, {1, 4}, {2, 4}, {3, 4}};
 
-Vec3 cube[8] = {{1, 1, 1}, {1, 1, -1}, {1, -1, 1}, {1, -1, -1}, {-1, 1, 1}, {-1, 1, -1}, {-1, -1, 1}, {-1, -1, -1}};
+enum State
+{
+	DVD,
+	THREED,
+};
 
-Vec3 pyramid[5] = {{0, 0, 0}, {1, 0, 0}, {0, 0, 1}, {1, 0, 1}, {.5, 1, .5}};
+enum Rot
+{
+	X = 1,
+	Y = 2,
+	Z = 4,
+};
 
-Vec3 happy[80] =
+enum Model
+{
+	BIRTHDAY,
+	CUBE,
+	PYRAMID,
+	LINE_X,
+	LINE_Y,
+	LINE_Z,
+};
+
+//Vec3 pov = {-2, 2, -2};
+#define CAMX (-10)
+#define CAMY (2)
+#define CAMZ (-25)
+const float dist = 25;
+
+const Vec3 cube[8] = {{1, 1, 1}, {1, 1, -1}, {1, -1, 1}, {1, -1, -1}, {-1, 1, 1}, {-1, 1, -1}, {-1, -1, 1}, {-1, -1, -1}};
+const int cube_line_indices[12][2] = {{0, 1}, {0, 2}, {0, 4}, {1, 3}, {1, 5}, {2, 3}, {2, 6}, {3, 7}, {4, 5}, {4, 6}, {5, 7}, {6, 7}};
+
+const Vec3 pyramid[5] = {{0, 0, 0}, {1, 0, 0}, {0, 0, 1}, {1, 0, 1}, {.5, 1, .5}};
+const int pyramid_line_indices[8][2] = {{0, 1}, {0, 2}, {3, 1}, {3, 2}, {0, 4}, {1, 4}, {2, 4}, {3, 4}};
+
+const Vec3 happy[80] =
 {
 //      0            1            2            3            4            5
 	{14, 9, 0}, {14, 1, 0}, {14, 5, 0}, {10, 5, 0}, {10, 9, 0}, {10, 1, 0}, //H
@@ -49,7 +78,7 @@ Vec3 happy[80] =
 //     76           77           78           79
 	{-21, -5, 0}, {-19, -1, 0}, {-23, -1, 0}, {-21, -9, 0}, //Y
 };
-int happy_line_indices[60][2] =
+const int happy_line_indices[60][2] =
 {
 	{0, 1}, {2, 3}, {4, 5}, //H
 	{6, 7}, {7, 8}, {9, 10}, //A
@@ -66,45 +95,16 @@ int happy_line_indices[60][2] =
 	{76, 77}, {76, 78}, {76, 79}, //Y
 };
 
-Vec3 line_x[2] = {{-1, 0, 0}, {1, 0, 0}};
-Vec3 line_y[2] = {{0, -1, 0}, {0, 1, 0}};
-Vec3 line_z[2] = {{0, 0, -1}, {0, 0, 1}};
-int line_line_indices[1][2] = {{0, 1}};
+const Vec3 line_x[2] = {{-1, 0, 0}, {1, 0, 0}};
+const Vec3 line_y[2] = {{0, -1, 0}, {0, 1, 0}};
+const Vec3 line_z[2] = {{0, 0, -1}, {0, 0, 1}};
+const int line_line_indices[1][2] = {{0, 1}};
 
-//Vec3 pov = {-2, 2, -2};
-#define CAMX (-10)
-#define CAMY (2)
-#define CAMZ (-25)
-float dist = 25;
 float t = 0;
-float scale = 5;
-Vec2 offset = {64, 15};
-
-enum State
-{
-	DVD,
-	THREED,
-};
-
-enum Rot
-{
-	X = 1,
-	Y = 2,
-	Z = 4,
-};
-
-enum Model
-{
-	BIRTHDAY,
-	CUBE,
-	PYRAMID,
-	LINE_X,
-	LINE_Y,
-	LINE_Z,
-};
-
-uint8_t current_rot = 0;
-Model current_model = CUBE;
+float scale = 0;
+uint8_t current_rot = Y;
+Model current_model = BIRTHDAY;
+Vec2 offset = {0, 0};
 
 int8_t pos_x = 0, pos_y = 0;
 int8_t vel_x = 1, vel_y = 1;
@@ -246,7 +246,6 @@ void handleRoot()
 
 void setup()
 {
-	// put your setup code here, to run once:
 	Heltec.begin(true, true);
 	Heltec.display->init();
 	Heltec.display->setFont(ArialMT_Plain_10);
@@ -259,7 +258,6 @@ void setup()
 void loop()
 {
 	server.handleClient();
-	// put your main code here, to run repeatedly:
 	Heltec.display->clear();
 	if(current_state == DVD)
 	{
